@@ -1,0 +1,5 @@
+pytest==8.1.1
+requests==2.32.0
+pymongo==4.6.3
+fastapi==0.110.1      # If testing FastAPI server too
+uvicorn==0.29.0        # If running local FastAPI server
