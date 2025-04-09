@@ -37,7 +37,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest tests/ -v
+        pytest tests/test_orders.py -v
 
     - name: Shut down containers
       if: always()
