@@ -21,8 +21,10 @@ def test_create_order():
     data = response.json()
     assert data["status"] == "Pending"
     test_order["_id"] = data["_id"]
+    print(test_order)
 
 def test_get_order():
+    print(test_order)
     response = requests.get(f"{BASE_URL}/{test_order['_id']}")
     assert response.status_code == 200
     assert response.json()["total_price"] == test_order["total_price"]

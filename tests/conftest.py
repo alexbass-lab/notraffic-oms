@@ -7,7 +7,7 @@ def mongo_client():
     yield client
     client.close()
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def clean_orders_collection(mongo_client):
     db = mongo_client["oms_db"]
     db.orders.delete_many({})
