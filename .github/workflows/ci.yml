@@ -28,6 +28,19 @@ jobs:
       run: |
         docker compose up -d --build
 
+    - name: Wait for MongoDB to be ready
+      run: |
+        echo "Waiting for MongoDB to be ready..."
+        for i in {1..10}; do
+          if docker exec mongodb mongo --eval "db.adminCommand('ping')" > /dev/null 2>&1; then
+            echo "MongoDB is ready"
+            break
+          else
+            echo "Waiting for MongoDB..."
+            sleep 3
+          fi
+        done
+
     - name: Wait for FastAPI to be ready
       run: |
         echo "Waiting for FastAPI to respond..."
