@@ -16,11 +16,3 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
-
-  test:
-    build:
-      context: .
-    command: [ "pytest", "tests/", "-v" ]
-    depends_on:
-      - fastapi
-      - mongo
