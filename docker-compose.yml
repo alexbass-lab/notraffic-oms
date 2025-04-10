@@ -1,20 +1,10 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  mongodb:
-    image: mongo:6.0
-    ports:
-      - "27017:27017"
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
   fastapi:
     build: .
+    container_name: fastapi
     ports:
       - "8000:8000"
-    depends_on:
-      mongodb:
-        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://localhost:27017  # Update this if your FastAPI uses env vars
