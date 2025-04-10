@@ -7,4 +7,6 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGO_URI=mongodb://localhost:27017  # Update this if your FastAPI uses env vars
+#      - MONGO_URI=mongodb://localhost:27017  # Update this if your FastAPI uses env vars
+      - MONGO_URI=mongodb://host.docker.internal:27017  # FastAPI will now use host Docker internal network
+

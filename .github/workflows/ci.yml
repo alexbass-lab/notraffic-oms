@@ -35,6 +35,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Set environment variable for MongoDB URI
+      run: echo "MONGO_URI=mongodb://host.docker.internal:27017" >> $GITHUB_ENV
+
     - name: Start FastAPI with Docker Compose
       run: docker compose up -d --build
 
