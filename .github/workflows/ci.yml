@@ -14,7 +14,7 @@ jobs:
       mongo:
         image: mongo:6.0
         ports:
-          - 27017:27017
+          - "27017:27017"  # Exposes the MongoDB port to the host machine
         options: >-
           --health-cmd="echo 'db.runCommand({ ping: 1 })' | mongosh localhost:27017/test --quiet"
           --health-interval=10s
@@ -36,10 +36,27 @@ jobs:
         pip install -r requirements.txt
 
     - name: Set environment variable for MongoDB URI
-      run: echo "MONGO_URI=mongodb://host.docker.internal:27017" >> $GITHUB_ENV
+      run: echo "MONGO_URI=mongodb://localhost:27017" >> $GITHUB_ENV  # MongoDB accessible on localhost
 
     - name: Start FastAPI with Docker Compose
       run: docker compose up -d --build
+
+    - name: Wait for MongoDB to be ready
+      run: |
+        echo "Waiting for MongoDB..."
+        for i in {1..10}; do
+          if mongo --host localhost --port 27017 --eval "db.runCommand({ping: 1})" > /dev/null 2>&1; then
+            echo "✅ MongoDB is up"
+            break
+          else
+            echo "⏳ MongoDB not ready... attempt $i"
+            sleep 3
+          fi
+          if [ $i -eq 10 ]; then
+            echo "❌ MongoDB did not start in time."
+            exit 1
+          fi
+        done
 
     - name: Wait for FastAPI to respond
       run: |
@@ -59,10 +76,11 @@ jobs:
           fi
         done
 
-    # Run tests inside Docker container (fixed command)
-    - name: Run tests inside Docker container
+    # Run tests outside Docker container
+    - name: Run tests outside Docker container
       run: |
-        docker exec fastapi bash -c "pip install -r /app/requirements.txt && pytest /app/tests/test_orders.py -v"
+        # Run pytest on the host machine (outside of Docker)
+        pytest tests/test_orders.py -v
 
     - name: Shut down containers
       if: always()
