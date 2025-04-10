@@ -59,10 +59,10 @@ jobs:
           fi
         done
 
-    # Run tests inside the Docker container
+    # Run tests inside Docker container (fixed command)
     - name: Run tests inside Docker container
       run: |
-        docker exec -T fastapi bash -c "pip install -r /app/requirements.txt && pytest /app/tests/test_orders.py -v"
+        docker exec fastapi bash -c "pip install -r /app/requirements.txt && pytest /app/tests/test_orders.py -v"
 
     - name: Shut down containers
       if: always()
