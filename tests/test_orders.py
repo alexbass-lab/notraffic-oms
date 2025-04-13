@@ -29,10 +29,13 @@ def test_get_order():
     assert response.status_code == 200
     assert response.json()["total_price"] == test_order["total_price"]
 
-def test_update_order_status():
-    response = requests.patch(f"{BASE_URL}/{test_order['_id']}", json={"status": "Shipped"})
+
+@pytest.mark.parametrize("new_status", ["Processing", "Shipped", "Delivered"])
+def test_update_order_status(new_status):
+    response = requests.patch(f"{BASE_URL}/{test_order['_id']}", json={"status": new_status})
     assert response.status_code == 200
-    assert response.json()["status"] == "Shipped"
+    assert response.json()["status"] == new_status
+
 
 def test_delete_order():
     response = requests.delete(f"{BASE_URL}/{test_order['_id']}")
