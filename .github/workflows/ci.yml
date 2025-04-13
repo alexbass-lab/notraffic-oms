@@ -15,11 +15,7 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: >
-          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })'" 
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5
+        options: "--health-cmd='echo Mongo ready' --health-interval=10s --health-timeout=5s --health-retries=5"
 
     steps:
       - name: 🔄 Checkout code
@@ -29,3 +25,64 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
+      - name: 📦 Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest requests
+
+      - name: 🛠️ Build FastAPI Docker image
+        run: docker build -t fastapi-test-image .
+
+      - name: 🚀 Run FastAPI container
+        run: |
+          docker run -d --name fastapi-test \
+            -e MONGO_URI="mongodb://localhost:27017" \
+            -e SECRET_KEY="mysecret" \
+            -p 8000:8000 fastapi-test-image
+
+      - name: ⏳ Wait for FastAPI to respond
+        run: |
+          echo "Waiting for FastAPI..."
+          for i in {1..10}; do
+            if curl -s http://localhost:8000/health; then
+              echo "✅ FastAPI is up"
+              break
+            else
+              echo "⏳ FastAPI not ready... attempt $i"
+              sleep 3
+            fi
+            if [ $i -eq 10 ]; then
+              echo "❌ FastAPI did not start in time."
+              docker logs fastapi-test || true
+              exit 1
+            fi
+          done
+
+      - name: 🔍 Wait for real MongoDB connectivity
+        run: |
+          echo "Checking real MongoDB ping..."
+          for i in {1..10}; do
+            if mongo --host localhost --eval "db.runCommand({ ping: 1 })" > /dev/null 2>&1; then
+              echo "✅ MongoDB is responding"
+              break
+            else
+              echo "⏳ MongoDB still warming up... attempt $i"
+              sleep 3
+            fi
+            if [ $i -eq 10 ]; then
+              echo "❌ MongoDB did not respond in time"
+              exit 1
+            fi
+          done
+
+      - name: 🧪 Run tests
+        run: pytest tests/ -v || (echo "❌ Tests failed" && docker logs fastapi-test && exit 1)
+
+      - name: 🧹 Cleanup containers
+        if: always()
+        run: |
+          echo "Cleaning up..."
+          docker stop fastapi-test || true
+          docker rm fastapi-test || true
