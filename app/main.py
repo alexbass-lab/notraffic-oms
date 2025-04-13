@@ -1,5 +1,3 @@
-import os
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -10,9 +8,7 @@ import uvicorn
 app = FastAPI(title="Order Management System API")
 
 # --- MongoDB Setup ---
-mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-client = MongoClient(mongo_uri)
-#client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient("mongodb://localhost:27017/")
 
 db = client["oms_db"]
 orders_collection = db["orders"]
