@@ -1,4 +1,4 @@
-name: CI Pipeline (no Docker Hub)
+name: CI Pipeline (FastAPI + MongoDB, no Docker Hub)
 
 on:
   push:
@@ -16,9 +16,9 @@ jobs:
         ports:
           - 27017:27017
         options: >
-          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval=10s
-          --health-timeout=5s
+          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })'" 
+          --health-interval=10s 
+          --health-timeout=5s 
           --health-retries=5
 
     steps:
@@ -29,51 +29,3 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: 📦 Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest requests
-
-      - name: 🛠️ Build FastAPI Docker image
-        run: docker build -t fastapi-test-image .
-
-      - name: 🚀 Run FastAPI container
-        run: |
-          docker run -d --name fastapi-test \
-            -e MONGO_URI="mongodb://localhost:27017" \
-            -e SECRET_KEY="mysecret" \
-            -p 8000:8000 fastapi-test-image
-
-      - name: ⏳ Wait for FastAPI to respond
-        run: |
-          echo "Waiting for FastAPI..."
-          for i in {1..10}; do
-            if curl -s http://localhost:8000/health; then
-              echo "✅ FastAPI is up"
-              break
-            else
-              echo "⏳ FastAPI not ready... attempt $i"
-              sleep 3
-            fi
-            if [ $i -eq 10 ]; then
-              echo "❌ FastAPI did not start in time."
-              docker logs fastapi-test || true
-              exit 1
-            fi
-          done
-
-      - name: 🧪 Run tests
-        run: pytest tests/ -v || (echo "❌ Tests failed" && docker logs fastapi-test && exit 1)
-
-      - name: 📦 Upload container logs on failure
-        if: failure()
-        run: docker logs fastapi-test || true
-
-      - name: 🧹 Cleanup containers
-        if: always()
-        run: |
-          docker ps -a
-          docker stop fastapi-test || true
-          docker rm fastapi-test || true
